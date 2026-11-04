@@ -12,4 +12,5 @@ class TestMain:
             "  Bibi, leurre en plastique : Pouic",
             "  Gertrude, oie cendrée : Honk",
             "  Appeau électronique : Coin-coin électronique (440 Hz)",
+            "Cris comptés : 5",
         ]

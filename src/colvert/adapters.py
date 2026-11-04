@@ -3,15 +3,16 @@ from birdlib import ElectronicCall, Goose
 
 class GooseAdapter:
     def __init__(self, goose: Goose) -> None:
-        raise NotImplementedError
+        self.goose = goose
 
     def quack(self) -> str:
-        raise NotImplementedError
+        return self.goose.honk()
 
 
 class ElectronicCallAdapter:
     def __init__(self, call: ElectronicCall, frequency: int) -> None:
-        raise NotImplementedError
+        self.call = call
+        self.frequency = frequency
 
     def quack(self) -> str:
-        raise NotImplementedError
+        return self.call.emit(self.frequency)
