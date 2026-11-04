@@ -12,5 +12,7 @@ class TestMain:
             "  Bibi, leurre en plastique : Pouic",
             "  Gertrude, oie cendrée : Honk",
             "  Appeau électronique : Coin-coin électronique (440 Hz)",
-            "Cris comptés : 5",
+            "  Volée de l'étang nord : Coin-coin, Coin-coin, Krik-krik",
+            "  Volée de passage : Honk, Honk, Coin-coin, Krik-krik",
+            "Cris comptés : 7",
         ]

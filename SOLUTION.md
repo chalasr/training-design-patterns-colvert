@@ -1,35 +1,42 @@
-# Étape 1 : solution du TP 8 (Adapter)
+# Étape 2 : solution du TP 9 (Decorator)
 
-- `GooseAdapter` et `ElectronicCallAdapter` sont des **adaptateurs** : ils offrent l'interface que Colvert attend, `quack()`, et traduisent l'appel vers celle de `birdlib`, `honk()` ou `emit(frequency)`.
-- Chaque adaptateur reçoit l'objet adapté dans son constructeur et le garde : c'est de la **composition**. `birdlib` n'a pas changé, ni `census()`.
-- `ElectronicCallAdapter` reçoit aussi la fréquence : `quack()` n'a pas de paramètre, `emit()` en demande un. C'est l'adaptateur qui comble la différence, et c'est `build_reserve()` qui choisit la valeur, 440 Hz.
-- `build_reserve()` assemble la réserve : c'est le seul endroit qui sait que Gertrude vient de `birdlib`.
+- `QuackCounter` est un **décorateur** au sens du GoF : il enveloppe un `Quackable`, ajoute un comportement (compter) et transmet l'appel à l'objet enveloppé.
+- Il est lui-même un `Quackable` : `census()` le recense comme un canard, et un compteur peut envelopper un autre compteur.
+- Chaque compteur a son propre compteur, `self.quacks`, créé dans `__init__`. Un attribut de classe (`QuackCounter.quacks += 1`) serait partagé par tous les compteurs.
+- Les canards et les adaptateurs n'ont pas changé : le comptage est ajouté de l'extérieur, au moment de l'assemblage, dans `main()`.
 
-## Pourquoi pas l'héritage ?
+## Adapter ou Decorator ?
 
-`class GooseAdapter(Goose)` marcherait aussi : c'est l'« adaptateur de classe » du GoF. Mais l'adaptateur hériterait alors de `honk()`, et de tout ce que `birdlib` ajoutera à `Goose`. Il ne pourrait pas non plus adapter une oie déjà créée par `birdlib`.
+Les deux enveloppent un objet. L'adaptateur **change l'interface** (`honk()` devient `quack()`) ; le décorateur **garde la même interface** et ajoute un comportement. On peut donc empiler des décorateurs, pas des adaptateurs.
 
-## Pourquoi pas `__getattr__` ?
+## Le `@decorator` de Python
+
+`demos/function_decorator.py` montre l'autre sens du mot :
 
 ```python
-class GooseAdapter:
-    def __init__(self, goose: Goose) -> None:
-        self.goose = goose
+def count_calls(function: Callable[[], str]) -> Callable[[], str]:
+    calls = 0
 
-    def quack(self) -> str:
-        return self.goose.honk()
+    @functools.wraps(function)
+    def wrapper() -> str:
+        nonlocal calls
+        calls += 1
+        print(f"  appel n° {calls} de {function.__name__}")
+        return function()
 
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self.goose, name)
+    return wrapper
 ```
 
-`__getattr__` est appelé quand un attribut n'existe pas sur l'objet : ici, il transmet tout appel inconnu à l'oie. C'est court, mais l'adaptateur offre alors toute l'interface de `Goose`, sans qu'on le voie en lisant la classe, et `mypy` ne peut plus rien vérifier. Le test `test_the_adapter_only_offers_the_duck_interface` l'interdit.
+- `@count_calls` enveloppe une **fonction**, une fois pour toutes, au moment où elle est définie : tous ses appels sont comptés.
+- `QuackCounter` enveloppe un **objet**, au moment où on le décide : on compte Gaston, et pas un autre colvert.
+- `functools.wraps` recopie le nom et la documentation de la fonction d'origine sur `wrapper`.
 
 ## Dans votre quotidien
 
-- `io.TextIOWrapper` adapte un flux binaire en flux texte : `open(path)` vous le rend sans que vous le voyiez.
-- Un SDK de paiement ou d'envoi de SMS, placé derrière une interface de votre application : le jour où vous changez de fournisseur, seul l'adaptateur change.
+- La pile `io` : `open(path, "rb")` rend un `BufferedReader` qui enveloppe un `FileIO`. `gzip.GzipFile(fileobj=...)` enveloppe un fichier ouvert.
+- Les middlewares WSGI : un middleware est une application WSGI qui en enveloppe une autre.
+- Un repository avec cache, qui enveloppe le repository réel et garde les résultats.
 
 ## Le TP suivant
 
-`src/colvert/counting.py` contient le squelette du TP 9, et `tests/test_counting.py` ses tests.
+`src/colvert/flock.py` contient le squelette du TP 10, et `tests/test_flock.py` ses tests.
