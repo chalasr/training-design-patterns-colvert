@@ -1,42 +1,23 @@
-# Étape 2 : solution du TP 9 (Decorator)
+# Étape 3 : solution du TP 10 (Composite)
 
-- `QuackCounter` est un **décorateur** au sens du GoF : il enveloppe un `Quackable`, ajoute un comportement (compter) et transmet l'appel à l'objet enveloppé.
-- Il est lui-même un `Quackable` : `census()` le recense comme un canard, et un compteur peut envelopper un autre compteur.
-- Chaque compteur a son propre compteur, `self.quacks`, créé dans `__init__`. Un attribut de classe (`QuackCounter.quacks += 1`) serait partagé par tous les compteurs.
-- Les canards et les adaptateurs n'ont pas changé : le comptage est ajouté de l'extérieur, au moment de l'assemblage, dans `main()`.
+- `Flock` est un **composite** : un `Quackable` qui contient des `Quackable`. Ses membres sont des **feuilles** (un canard, une oie adaptée, un compteur) ou d'autres composites (une volée).
+- `Flock.quack()` demande son cri à chaque membre, sans savoir ce qu'il est. Quand un membre est une volée, son propre `quack()` interroge ses membres à son tour : c'est une **récursion**, que personne n'a écrite explicitement. Elle s'arrête aux feuilles.
+- `census()` n'a pas changé : il recense une volée comme un seul oiseau.
+- `__iter__()` rend un itérateur sur la liste des membres : `for bird in flock:` et `list(flock)` fonctionnent.
+- `Flock(*birds)` reçoit les membres en nombre quelconque : `Flock(Mallard(), Teal())`.
 
-## Adapter ou Decorator ?
+## Les quatre patterns ensemble
 
-Les deux enveloppent un objet. L'adaptateur **change l'interface** (`honk()` devient `quack()`) ; le décorateur **garde la même interface** et ajoute un comportement. On peut donc empiler des décorateurs, pas des adaptateurs.
+La « volée de passage » contient deux oies adaptées (Adapter) et une petite volée (Composite). Dans `main()`, chaque entrée de la réserve est enveloppée dans un `QuackCounter` (Decorator). Aucun `isinstance` nulle part.
 
-## Le `@decorator` de Python
+`python -m colvert` affiche `Cris comptés : 7` : chaque compteur compte les appels à `quack()` de **son** objet, et une volée répond en une fois. Pour compter chaque oiseau, il faut envelopper chaque oiseau avant de le mettre dans la volée.
 
-`demos/function_decorator.py` montre l'autre sens du mot :
+## Les opérations qui n'ont pas de sens sur une feuille
 
-```python
-def count_calls(function: Callable[[], str]) -> Callable[[], str]:
-    calls = 0
-
-    @functools.wraps(function)
-    def wrapper() -> str:
-        nonlocal calls
-        calls += 1
-        print(f"  appel n° {calls} de {function.__name__}")
-        return function()
-
-    return wrapper
-```
-
-- `@count_calls` enveloppe une **fonction**, une fois pour toutes, au moment où elle est définie : tous ses appels sont comptés.
-- `QuackCounter` enveloppe un **objet**, au moment où on le décide : on compte Gaston, et pas un autre colvert.
-- `functools.wraps` recopie le nom et la documentation de la fonction d'origine sur `wrapper`.
+`add()` existe sur `Flock`, pas sur `Mallard`. Le GoF discute de mettre `add()` dans l'interface commune, pour que feuilles et composites soient interchangeables en tout point : il faut alors décider ce que fait `add()` sur un canard (lever une exception ?). Ici, l'interface commune se limite à `quack()`, et seul celui qui construit une volée appelle `add()`.
 
 ## Dans votre quotidien
 
-- La pile `io` : `open(path, "rb")` rend un `BufferedReader` qui enveloppe un `FileIO`. `gzip.GzipFile(fileobj=...)` enveloppe un fichier ouvert.
-- Les middlewares WSGI : un middleware est une application WSGI qui en enveloppe une autre.
-- Un repository avec cache, qui enveloppe le repository réel et garde les résultats.
-
-## Le TP suivant
-
-`src/colvert/flock.py` contient le squelette du TP 10, et `tests/test_flock.py` ses tests.
+- Le module `ast` : un nœud `Module` contient des instructions, qui contiennent des expressions, qui contiennent des expressions.
+- La collecte de pytest : une session contient des modules, qui contiennent des classes, qui contiennent des tests.
+- Les composants d'une interface graphique, ou d'une page React : un composant contient des composants.

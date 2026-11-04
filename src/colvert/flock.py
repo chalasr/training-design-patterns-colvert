@@ -5,13 +5,13 @@ from colvert.ducks import Quackable
 
 class Flock:
     def __init__(self, *birds: Quackable) -> None:
-        raise NotImplementedError
+        self.birds = list(birds)
 
     def add(self, bird: Quackable) -> None:
-        raise NotImplementedError
+        self.birds.append(bird)
 
     def quack(self) -> str:
-        raise NotImplementedError
+        return ", ".join(bird.quack() for bird in self.birds)
 
     def __iter__(self) -> Iterator[Quackable]:
-        raise NotImplementedError
+        return iter(self.birds)
